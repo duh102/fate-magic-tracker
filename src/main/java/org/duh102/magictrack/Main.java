@@ -10,6 +10,8 @@ public class Main implements ActionListener {
     private UIState state;
     private JFrame frame;
 
+    String title = "Magic Tracker";
+
     JTextField characterNameField = new JTextField();
     JTextField initialLevelField = new JTextField();
     final JComponent[] newCharacterDialogInputs = new JComponent[] {
@@ -20,7 +22,7 @@ public class Main implements ActionListener {
     };
 
     public Main() {
-        frame = new JFrame("Magic tracker");
+        frame = new JFrame(title);
         state = new UIState(frame, this);
     }
     public void start() {
@@ -73,7 +75,6 @@ public class Main implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         String actionCommand = e.getActionCommand();
-        //System.err.printf("Action: %s\n", actionCommand);
         String[] actionComponents = actionCommand.split("_");
         String target = actionComponents[0];
         if(target.equals("menu")) {
@@ -94,13 +95,15 @@ public class Main implements ActionListener {
         } else {
             state.performAction(actionComponents[1], actionComponents[2]);
         }
+        String newTitle = String.format("%s%s", title, state.isStateSaved() ? "" : " (*)");
+        frame.setTitle(newTitle);
     }
 
     public void loadAction() {
-        state.setSaved();
+        state.loadDialog();
     }
     public void saveAction() {
-        state.setSaved();
+        state.saveDialog();
     }
     public void exitAction() {
         frame.dispose();

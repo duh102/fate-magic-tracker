@@ -1,11 +1,10 @@
 package org.duh102.magictrack.model;
 
-import java.util.Objects;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 public class MagicTracker {
     MagicLevel characterLevel;
     double currentUseLevel;
-    double maxSafeUseLevel;
 
     public MagicTracker() {
         this(MagicLevel.ONE);
@@ -16,15 +15,11 @@ public class MagicTracker {
         }
         characterLevel = level;
         currentUseLevel = 0;
-        maxSafeUseLevel = level.getMaxSafe();
     }
 
     public MagicTracker castSpell(int level, int cost) {
         currentUseLevel += Math.max(cost - (cost * (characterLevel.getLevelInt() - level) * characterLevel.getDiscount()), 0.1);
         return this;
-    }
-    public MagicTracker castSpell(MagicLevel level, int cost) {
-        return castSpell(level.getLevelInt(), cost);
     }
 
     public MagicTracker resetTracker() {
@@ -35,14 +30,16 @@ public class MagicTracker {
         this.characterLevel = characterLevel;
         return this;
     }
+    @JsonIgnore
     public MagicLevel getCharacterLevel() {
         return characterLevel;
     }
     public double getCurrentUseLevel() {
         return currentUseLevel;
     }
+    @JsonIgnore
     public double getMaxSafeUseLevel() {
-        return maxSafeUseLevel;
+        return characterLevel.getMaxSafe();
     }
 
     @Override

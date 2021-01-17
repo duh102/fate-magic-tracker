@@ -1,7 +1,11 @@
 package org.duh102.magictrack.model;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import org.duh102.magictrack.model.serialization.CharacterDeserializationFixup;
+
 import java.util.Objects;
 
+@JsonDeserialize(converter=CharacterDeserializationFixup.class)
 public class Character {
     String name;
     MagicTracker currentMagicState;

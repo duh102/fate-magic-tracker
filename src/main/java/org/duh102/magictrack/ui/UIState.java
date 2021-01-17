@@ -1,11 +1,17 @@
 package org.duh102.magictrack.ui;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.duh102.magictrack.model.Character;
 import org.duh102.magictrack.model.MagicLevel;
 
 import javax.swing.*;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class UIState {
@@ -38,16 +44,21 @@ public class UIState {
     public UIState addCharacter(String charName, int initialLevel) {
         initialLevel = Math.min(Math.max(0, initialLevel-1), MagicLevel.MAGIC_LEVELS.length-1);
         Character character = new Character(charName, MagicLevel.MAGIC_LEVELS[initialLevel]);
+        return addCharacterInner(character, false);
+    }
+    public UIState addCharacterInner(Character character, boolean batchAdd) {
         CharacterPanel newCharacterPanel = new CharacterPanel(panel, listener, character);
         characterPanels.put(character, newCharacterPanel);
-        regenCharNameMap();
+        if(!batchAdd) {
+            regenCharNameMap();
+        }
 
         panel.add(newCharacterPanel.getPanel());
 
-        stateSaved = false;
-        panel.repaint();
-        panel.revalidate();
-        container.revalidate();
+        setModified();
+        if(!batchAdd) {
+            refreshView();
+        }
         return this;
     }
     public UIState removeCharacter(String charName) {
@@ -59,12 +70,15 @@ public class UIState {
         regenCharNameMap();
 
         panel.remove(toRemovePanel.getPanel());
+        refreshView();
+        setModified();
+        return this;
+    }
 
-        stateSaved = false;
+    private void refreshView() {
         panel.repaint();
         panel.revalidate();
         container.revalidate();
-        return this;
     }
 
     public JPanel getPanel() {
@@ -98,14 +112,68 @@ public class UIState {
                 charPanel.reset();
                 break;
         }
+        setModified();
     }
 
     public UIState setSaved() {
         stateSaved = true;
         return this;
     }
+    public UIState setModified() {
+        stateSaved = false;
+        return this;
+    }
     public boolean isStateSaved() {
         return stateSaved;
+    }
+
+    public UIState loadDialog() {
+        JFileChooser fc = new JFileChooser(System.getProperty("user.dir"));
+        fc.setDialogType(JFileChooser.OPEN_DIALOG);
+        fc.setSelectedFile(new File("magicstate.json"));
+        int retVal = fc.showOpenDialog(panel);
+        if(retVal == JFileChooser.APPROVE_OPTION) {
+            File selectedFile = fc.getSelectedFile();
+            ObjectMapper mapper = new ObjectMapper();
+            List<Character> characters = null;
+            try {
+                characters = mapper.readValue(selectedFile, new TypeReference<List<Character>>(){});
+            } catch (IOException e) {
+                System.err.println("Error while loading:");
+                e.printStackTrace();
+            }
+            characterPanels.clear();
+            panel.removeAll();
+            if(characters != null) {
+                for (Character character : characters) {
+                    addCharacterInner(character, true);
+                }
+            }
+            regenCharNameMap();
+            refreshView();
+            setSaved();
+        }
+        return this;
+    }
+
+    public UIState saveDialog() {
+        JFileChooser fc = new JFileChooser(System.getProperty("user.dir"));
+        fc.setDialogType(JFileChooser.SAVE_DIALOG);
+        fc.setSelectedFile(new File("magicstate.json"));
+        int retVal = fc.showSaveDialog(panel);
+        if(retVal == JFileChooser.APPROVE_OPTION) {
+            File selectedFile = fc.getSelectedFile();
+            ObjectMapper mapper = new ObjectMapper();
+            List<Character> characters = new ArrayList<>(characterPanels.keySet());
+            try {
+                mapper.writerWithDefaultPrettyPrinter().writeValue(selectedFile, characters);
+                setSaved();
+            } catch (IOException e) {
+                System.err.println("Error while saving:");
+                e.printStackTrace();
+            }
+        }
+        return this;
     }
 
     public void castSpellDialog(Character character, CharacterPanel toCastWith) {
