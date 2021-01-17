@@ -34,20 +34,6 @@
             <version>${assertj.version}</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-jar-plugin</artifactId>
-            <version>3.2.0</version>
-            <type>maven-plugin</type>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.maven.plugins</groupId>
-            <artifactId>maven-dependency-plugin</artifactId>
-            <version>3.1.2</version>
-            <type>maven-plugin</type>
-            <scope>compile</scope>
-        </dependency>
     </dependencies>
 
     <build>
@@ -67,7 +53,8 @@
                             <outputDirectory>${project.build.directory}/lib</outputDirectory>
                             <overWriteReleases>false</overWriteReleases>
                             <overWriteSnapshots>false</overWriteSnapshots>
-                            <overWriteIfNewer>true</overWriteIfNewer>
+			    <overWriteIfNewer>true</overWriteIfNewer>
+			    <includeScope>compile</includeScope>
                         </configuration>
                     </execution>
                 </executions>
